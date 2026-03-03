@@ -1,0 +1,46 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        perl: ['5.26', '5.30', '5.34', '5.38', '5.40']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      - run: sudo apt-get update && sudo apt-get install -y libpugixml-dev
+      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: perl Makefile.PL && make && make test
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        perl: ['5.34', '5.38', '5.40']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      - run: brew install pugixml
+      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: perl Makefile.PL && make && make test
+
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y perl5 gmake pkgconf pugixml openssl
+            pkg install -y p5-App-cpanminus p5-Net-SSLeay p5-IO-Socket-SSL p5-Mozilla-CA
+            cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+          run: |
+            perl Makefile.PL && gmake && gmake test
