@@ -1,5 +1,9 @@
 Revision history for XML-PugiXML
 
+0.03  2026-03-16
+    - Fix XSUB stack panic on Perl 5.42+ (RC stack)
+    - Fix floating-point test comparison portability
+
 0.02  2026-03-14
     - Stale handle detection after reset/reload (no more segfaults)
     - XPath attribute selection support (//@id now works)

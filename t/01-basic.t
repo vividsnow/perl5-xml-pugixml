@@ -36,7 +36,7 @@ is($attr->as_int, 1, 'attr as_int');
 
 # Test as_double
 my $val_attr = $item->attr('val');
-is($val_attr->as_double, 3.14, 'attr as_double');
+cmp_ok(sprintf("%.2f", $val_attr->as_double), '==', 3.14, 'attr as_double');
 
 # Test as_bool
 my $flag_attr = $item->attr('flag');

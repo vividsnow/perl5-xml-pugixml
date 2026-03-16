@@ -258,9 +258,10 @@ PPCODE:
 {
     try {
         xpath_node_set nodes = self->doc->select_nodes(xpath);
+        EXTEND(SP, (SSize_t)nodes.size());
         for (xpath_node_set::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
             SV* sv = wrap_xpath_result(aTHX_ *it, ST(0));
-            XPUSHs(sv_2mortal(sv));
+            PUSHs(sv_2mortal(sv));
         }
     } catch (const xpath_exception& e) {
         croak("XPath error: %s", e.what());
@@ -520,16 +521,18 @@ children(XML::PugiXML::Node self, utf8_str name = NULL)
 PPCODE:
 {
     CHECK_NODE_ALIVE(self);
+    /* Count first, then extend stack once */
+    SSize_t count = 0;
     if (name) {
-        for (xml_node child = self->node.child(name); child; child = child.next_sibling(name)) {
-            SV* node_sv = wrap_node(aTHX_ child, self->doc_sv);
-            XPUSHs(sv_2mortal(node_sv));
-        }
+        for (xml_node c = self->node.child(name); c; c = c.next_sibling(name)) count++;
+        EXTEND(SP, count);
+        for (xml_node child = self->node.child(name); child; child = child.next_sibling(name))
+            PUSHs(sv_2mortal(wrap_node(aTHX_ child, self->doc_sv)));
     } else {
-        for (xml_node child = self->node.first_child(); child; child = child.next_sibling()) {
-            SV* node_sv = wrap_node(aTHX_ child, self->doc_sv);
-            XPUSHs(sv_2mortal(node_sv));
-        }
+        for (xml_node c = self->node.first_child(); c; c = c.next_sibling()) count++;
+        EXTEND(SP, count);
+        for (xml_node child = self->node.first_child(); child; child = child.next_sibling())
+            PUSHs(sv_2mortal(wrap_node(aTHX_ child, self->doc_sv)));
     }
 }
 
@@ -538,10 +541,11 @@ attrs(XML::PugiXML::Node self)
 PPCODE:
 {
     CHECK_NODE_ALIVE(self);
-    for (xml_attribute attr = self->node.first_attribute(); attr; attr = attr.next_attribute()) {
-        SV* attr_sv = wrap_attr(aTHX_ attr, self->node, self->doc_sv);
-        XPUSHs(sv_2mortal(attr_sv));
-    }
+    SSize_t count = 0;
+    for (xml_attribute a = self->node.first_attribute(); a; a = a.next_attribute()) count++;
+    EXTEND(SP, count);
+    for (xml_attribute attr = self->node.first_attribute(); attr; attr = attr.next_attribute())
+        PUSHs(sv_2mortal(wrap_attr(aTHX_ attr, self->node, self->doc_sv)));
 }
 
 SV*
@@ -729,9 +733,10 @@ PPCODE:
     CHECK_NODE_ALIVE(self);
     try {
         xpath_node_set nodes = self->node.select_nodes(xpath);
+        EXTEND(SP, (SSize_t)nodes.size());
         for (xpath_node_set::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
             SV* sv = wrap_xpath_result(aTHX_ *it, self->doc_sv);
-            XPUSHs(sv_2mortal(sv));
+            PUSHs(sv_2mortal(sv));
         }
     } catch (const xpath_exception& e) {
         croak("XPath error: %s", e.what());
@@ -1057,9 +1062,10 @@ PPCODE:
     CHECK_NODE_ALIVE(node);
     try {
         xpath_node_set nodes = self->query->evaluate_node_set(node->node);
+        EXTEND(SP, (SSize_t)nodes.size());
         for (xpath_node_set::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
             SV* sv = wrap_xpath_result(aTHX_ *it, node->doc_sv);
-            XPUSHs(sv_2mortal(sv));
+            PUSHs(sv_2mortal(sv));
         }
     } catch (const xpath_exception& e) {
         croak("XPath error: %s", e.what());
