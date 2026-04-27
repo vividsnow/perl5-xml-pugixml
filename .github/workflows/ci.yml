@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        perl: ['5.34', '5.38', '5.40']
+        perl: ['5.38', '5.40']
     steps:
       - uses: actions/checkout@v4
       - uses: shogo82148/actions-setup-perl@v1
