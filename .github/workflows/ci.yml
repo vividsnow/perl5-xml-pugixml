@@ -16,6 +16,26 @@ jobs:
       - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
       - run: perl Makefile.PL && make && make test
 
+  # setup-perl defaults to -Duseithreads=false on Linux/macOS, so the matrix
+  # above skips t/10-threads.t entirely. This job is the only coverage for the
+  # CLONE_SKIP protection: without it, cloning a document into a new thread
+  # double-frees the wrapped C++ object on join.
+  linux-threads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.40'
+          multi-thread: true
+      # Fail loudly rather than let t/10 silently skip and report a false pass.
+      - run: perl -MConfig -e 'die "perl is not threaded\n" unless $Config{useithreads}; print "ithreads enabled\n"'
+      - run: sudo apt-get update && sudo apt-get install -y libpugixml-dev
+      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: perl Makefile.PL && make && make test
+      # Confirm the threads test actually executed instead of skipping.
+      - run: perl Makefile.PL >/dev/null && make >/dev/null && perl -Mblib t/10-threads.t
+
   macos:
     runs-on: macos-latest
     strategy:
