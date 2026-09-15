@@ -8,12 +8,12 @@ jobs:
       matrix:
         perl: ['5.26', '5.30', '5.34', '5.38', '5.40']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
       - run: sudo apt-get update && sudo apt-get install -y libpugixml-dev
-      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: cpanm -nq Alien::Build Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
       - run: perl Makefile.PL && make && make test
 
   # setup-perl defaults to -Duseithreads=false on Linux/macOS, so the matrix
@@ -23,7 +23,7 @@ jobs:
   linux-threads:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.40'
@@ -31,7 +31,7 @@ jobs:
       # Fail loudly rather than let t/10 silently skip and report a false pass.
       - run: perl -MConfig -e 'die "perl is not threaded\n" unless $Config{useithreads}; print "ithreads enabled\n"'
       - run: sudo apt-get update && sudo apt-get install -y libpugixml-dev
-      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: cpanm -nq Alien::Build Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
       - run: perl Makefile.PL && make && make test
       # Confirm the threads test actually executed instead of skipping.
       - run: perl Makefile.PL >/dev/null && make >/dev/null && perl -Mblib t/10-threads.t
@@ -43,24 +43,24 @@ jobs:
       matrix:
         perl: ['5.38', '5.40']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
       - run: brew install pugixml
-      - run: cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+      - run: cpanm -nq Alien::Build Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
       - run: perl Makefile.PL && make && make test
 
   freebsd:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
           prepare: |
             pkg install -y perl5 gmake pkgconf pugixml openssl
             pkg install -y p5-App-cpanminus p5-Net-SSLeay p5-IO-Socket-SSL p5-Mozilla-CA
-            cpanm -nq Alien::Build Alien::cmake3 Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
+            cpanm -nq Alien::Build Test::Alien URI Sort::Versions Mojo::DOM58 Alien::pugixml
           run: |
             perl Makefile.PL && gmake && gmake test
